@@ -97,3 +97,17 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+### Building and running your application
+
+When you're ready, start your application by running:
+`docker compose up --build`.
+
+Your application will be available at http://localhost:3000.
+
+If you're in an ARM-based CPU (Apple M1) like me, you might need to use the `DOCKER_DEFAULT_PLATFORM=linux/amd64` argument when you build the Docker image.
+If you're on Apple Silicon, turn Rosetta support on for x86_64/amd64.
+
+`DOCKER_DEFAULT_PLATFORM=linux/amd64 docker compose up --build`
+
+For GraphQL I'm using code-first approach (using TypeScript classes to generate the corresponding GraphQL schemas).
