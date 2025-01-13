@@ -10,17 +10,17 @@ import { UserModule } from './users/user.module';
 @Module({
   imports: [
     UserModule,
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'postgres',
-      port: 5432,
-      username: 'postgres',
-      password: 'postgres',
-      database: 'postgres',
-      entities: [],
-      synchronize: true,
-      autoLoadEntities: true,
-    }),
+    // TypeOrmModule.forRoot({
+    //   type: 'postgres',
+    //   host: 'postgres',
+    //   port: 5432,
+    //   username: 'postgres',
+    //   password: 'postgres',
+    //   database: 'postgres',
+    //   entities: [],
+    //   synchronize: true,
+    //   autoLoadEntities: true,
+    // }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: 'schema.gql',

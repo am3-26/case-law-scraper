@@ -14,7 +14,8 @@ export class UserResolver {
   @Query(() => User)
   async getUserById(@Args('id', { type: () => String }) id: string) {
     await this.scrapperService.scrape(
-      'https://mfkn.naevneneshus.dk/soeg?sort=desc&types=ruling',
+      'https://mfkn.naevneneshus.dk/soeg?types=ruling&sort=score',
+      50,
     );
     const user = await this.userService.findOneById(id);
     if (!user) {
