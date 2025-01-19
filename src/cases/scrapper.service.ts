@@ -9,10 +9,10 @@ import { CaseService } from './case.service';
 export class ScrapperService {
   constructor() {}
 
-  async scrape(caseService: CaseService, url: string, pages: number) {
+  async scrapeWebsite(caseService: CaseService, url: string, pages: number) {
     const browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox'], // using --no-sandbox is an insecure solution but i cannot make it work in docker otherwise...
+      args: ['--no-sandbox'], // using --no-sandbox is an insecure solution! should not be used in production!
       timeout: 100000,
       dumpio: true,
     });
@@ -29,21 +29,21 @@ export class ScrapperService {
         await page.waitForSelector(radioButtonSelector, { timeout: 5000 });
         await page.click(radioButtonSelector);
         await page.waitForNetworkIdle();
-        console.log('Sorted by desc...');
+        console.log('Sorted the rulings by desc...');
       } catch {
         console.log('Could not sort the cases.');
       }
 
       let pageNumber = 1;
       while (pageNumber <= pages) {
-        console.log('Page ', pageNumber);
+        console.log(`Loading page ${pageNumber}...`);
         try {
           await page.waitForSelector(loadMoreButtonSelector, { timeout: 5000 });
           await page.click(loadMoreButtonSelector);
           await page.waitForNetworkIdle();
           pageNumber += 1;
         } catch {
-          console.log('Reached the end of the list.');
+          console.log('Cannot load any more pages!');
           pageNumber = pages;
         }
       }
@@ -53,10 +53,10 @@ export class ScrapperService {
       );
 
       for (url of hrefs) {
-        await this.goToUrl(browser, url, caseService);
+        await this.scrapeRuling(browser, url, caseService);
       }
     } catch (error) {
-      console.error('Error scraping dynamic content:', error);
+      console.error(`Error scraping the ${url} page: `, error);
     } finally {
       await browser.close();
     }
@@ -71,11 +71,11 @@ export class ScrapperService {
       await page.waitForNetworkIdle();
       console.log('Consented to cookies.');
     } catch {
-      console.log('There was no cookies pop-up.');
+      console.log('No cookies to consent to :(');
     }
   }
 
-  async goToUrl(browser: Browser, url: string, caseService: CaseService) {
+  async scrapeRuling(browser: Browser, url: string, caseService: CaseService) {
     const page = await browser.newPage();
 
     try {

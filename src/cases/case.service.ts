@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Case } from './case.model';
-import { ArrayContains, In, Repository } from 'typeorm';
+import { ArrayContains, Repository } from 'typeorm';
 
 @Injectable()
 export class CaseService {

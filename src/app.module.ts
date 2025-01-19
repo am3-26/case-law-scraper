@@ -5,8 +5,6 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { CaseModule } from './cases/case.module';
 import { Case } from './cases/case.model';
 
-// The root module of the application.
-
 @Module({
   imports: [
     CaseModule,
@@ -19,7 +17,7 @@ import { Case } from './cases/case.model';
       database: 'mfkn',
       entities: [Case],
       migrations: [],
-      synchronize: true, // just for dev env
+      synchronize: true, // should not be used in production
       logging: false,
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({

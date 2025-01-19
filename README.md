@@ -80,6 +80,15 @@ Post request (curl):
 curl 'http://localhost:3000/graphql' -H 'Accept-Encoding: gzip, deflate, br' -H 'Content-Type: application/json' -H 'Accept: application/json' -H 'Connection: keep-alive' -H 'DNT: 1' -H 'Origin: http://localhost:3000' --data-binary '{"query":"{getRulingsByCaseId(id:\"23/12751\") {url,caseIds,date,areaOfLaw,ruling}}"}' --compressed
 ```
 
-# Key decisions and any notable trade-offs.
+# Key decisions & future considerations
 
-# Anything you’d change or add to make the solution production-ready (e.g., tests, security enhancements).
+- In production the DB configuration should be coming from a Config System, or ideally as an env variable.
+- Using '--no-sandbox' flag with puppeteer is unsecure (as illustrated in this [nice comic by Google Chrome team](https://www.google.com/googlebooks/chrome/med_26.html)) and is only a workaround to make it work in the Docker image without granting it [SYS_ADMIN privileges](https://github.com/puppeteer/puppeteer/tree/main/docker#running-the-image). For production, a more secure option should be considered.
+- Future consideration: the `scrape()` endpoint should store rulings as they appear on the page - currently, however, it tries to load all the rulings before going through the content and storing the rulings.
+- The `scrape()` endpoint actually returns _all_ of the rulings stored in the DB, not just the ones that got scraped by the query. It could be considered best of two worlds (web scraper initiator & findAll() endpoint 😎) Of course, in production the `scrape()` endpoint should return all the cases that just got scraped, and `getRulings()` should be a separate endpoint.
+- In production DB migrations should be used instead of `synchronize: true` to create schema tables.
+- In production (it is also mentioned in the document) `getRulings()` (or such) endpoint should support filtering & sorting
+- Ruling's URL was chosen as a primary key, since one ruling can have several case IDs. Instead of using the URL, it would also be perfectly okay to autogenerate UUID's as primary id, and just check the DB by case id / url for existing rulings before storing a newly scraped one - however, I considered it to be a bit messy.
+- If some data cannot be found on the page (case id(s), date, area of law), the case gets skipped with the error logged. In production some fields can probably be set to nullable and the case can still be stored, as long as the ruling's full text has been scraped.
+- While using the [MFKN website](https://mfkn.naevneneshus.dk), I realised that even when passing the `sort=desc` query parameter, the sorting would sometimes not be applied on the website... That's why there is extra logic to manually click the sorting button when on the page.
+- There should be tests!

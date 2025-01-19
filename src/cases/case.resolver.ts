@@ -13,7 +13,7 @@ export class CaseResolver {
 
   @Query(() => [Case])
   async scrape(@Args('pages', { type: () => Number }) pages: number) {
-    await this.scrapperService.scrape(
+    await this.scrapperService.scrapeWebsite(
       this.caseService,
       'https://mfkn.naevneneshus.dk/soeg?types=ruling&sort=score',
       pages,
