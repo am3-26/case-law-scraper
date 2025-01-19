@@ -11,23 +11,20 @@ export class CaseResolver {
     private readonly scrapperService: ScrapperService,
   ) {}
 
-  @Query(() => Case)
-  async scrape(@Args('amount', { type: () => Number }) amount: number) {
+  @Query(() => [Case])
+  async scrape(@Args('pages', { type: () => Number }) pages: number) {
     await this.scrapperService.scrape(
       this.caseService,
       'https://mfkn.naevneneshus.dk/soeg?types=ruling&sort=score',
-      amount,
+      pages,
     );
+
+    return await this.caseService.getAllCases();
   }
 
-  @Query(() => Case)
-  async getCaseById(@Args('id', { type: () => String }) id: string) {
-    await this.scrapperService.scrape(
-      this.caseService,
-      'https://mfkn.naevneneshus.dk/soeg?types=ruling&sort=score',
-      50,
-    );
-    const ccase = await this.caseService.findById(id);
+  @Query(() => [Case])
+  async getRulingsByCaseId(@Args('id', { type: () => String }) id: string) {
+    const ccase = await this.caseService.findByCaseId(id);
     if (!ccase) {
       throw new NotFoundException(id);
     }

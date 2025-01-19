@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import puppeteer, { Browser } from 'puppeteer';
+import puppeteer, { Browser, Page } from 'puppeteer';
 import { parse } from 'date-fns';
 import * as console from 'node:console';
 import { da } from 'date-fns/locale';
@@ -9,9 +9,7 @@ import { CaseService } from './case.service';
 export class ScrapperService {
   constructor() {}
 
-  async scrape(caseService: CaseService, url: string, items: number) {
-    const pageAmount = Math.ceil(items / 10); // i decided to always round up
-
+  async scrape(caseService: CaseService, url: string, pages: number) {
     const browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox'], // using --no-sandbox is an insecure solution but i cannot make it work in docker otherwise...
@@ -22,18 +20,7 @@ export class ScrapperService {
 
     try {
       await page.goto(url);
-
-      // thats #id
-      const cookiesConsent =
-        'button#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll';
-      try {
-        await page.waitForSelector(cookiesConsent, { timeout: 5000 });
-        await page.click(cookiesConsent);
-        await page.waitForNetworkIdle();
-        console.log('Consented to cookies :)');
-      } catch {
-        console.log('There was no cookies pop-up.');
-      }
+      await this.consentToCookies(page);
 
       const loadMoreButtonSelector = 'button#view-more';
       const radioButtonSelector = 'input#dato-up';
@@ -48,7 +35,7 @@ export class ScrapperService {
       }
 
       let pageNumber = 1;
-      while (pageNumber <= pageAmount) {
+      while (pageNumber <= pages) {
         console.log('Page ', pageNumber);
         try {
           await page.waitForSelector(loadMoreButtonSelector, { timeout: 5000 });
@@ -57,14 +44,13 @@ export class ScrapperService {
           pageNumber += 1;
         } catch {
           console.log('Reached the end of the list.');
-          pageNumber = pageAmount;
+          pageNumber = pages;
         }
       }
 
       const hrefs = await page.$$eval('a.full-link', (as) =>
         as.map((a) => a.href),
       );
-      console.log('Links:', hrefs);
 
       for (url of hrefs) {
         await this.goToUrl(browser, url, caseService);
@@ -76,41 +62,52 @@ export class ScrapperService {
     }
   }
 
-  /**
-   * Would be nice to add a url column so i know where the case came from and can double-check it
-   */
+  async consentToCookies(page: Page) {
+    const cookiesConsent =
+      'button#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll';
+    try {
+      await page.waitForSelector(cookiesConsent, { timeout: 5000 });
+      await page.click(cookiesConsent);
+      await page.waitForNetworkIdle();
+      console.log('Consented to cookies.');
+    } catch {
+      console.log('There was no cookies pop-up.');
+    }
+  }
+
   async goToUrl(browser: Browser, url: string, caseService: CaseService) {
     const page = await browser.newPage();
 
-    await page.goto(url);
-    await page.screenshot({
-      path: 'debug-url.png',
-      fullPage: true,
-    });
+    try {
+      await page.goto(url);
 
-    const caseId = await page.$eval(
-      '#sidebar > div.sidebar-sag > p > span > span',
-      (a) => a.textContent.trim(),
-    );
-    const date = await page.$eval(
-      '#sidebar > div.sidebar-date > p',
-      (a) => a.textContent,
-    );
-    const subject = await page.$eval(
-      '#sidebar > div.sidebar-category > p > a',
-      (a) => a.textContent.trim(),
-    );
-    const ruling = await page.$eval(
-      '#ruling > div.container > div > div.col-md-10.first.main.ruling-body > div.html-content',
-      (a) => a.textContent,
-    );
+      const caseIds = await page.$eval(
+        '#sidebar > div.sidebar-sag > p > span > span',
+        (a) => a.textContent.trim().split(/, |,| og /),
+      );
+      const date = await page.$eval(
+        '#sidebar > div.sidebar-date > p',
+        (a) => a.textContent,
+      );
+      const subject = await page.$eval(
+        '#sidebar > div.sidebar-category > p > a',
+        (a) => a.textContent.trim(),
+      );
+      const ruling = await page.$eval(
+        '#ruling > div.container > div > div.col-md-10.first.main.ruling-body > div.html-content',
+        (a) => a.textContent,
+      );
 
-    await caseService.storeCase(
-      caseId,
-      parse(date, 'd. MMMM yyyy.', new Date(), { locale: da }),
-      subject,
-      ruling,
-    );
+      await caseService.storeCase(
+        url,
+        caseIds,
+        parse(date, 'd. MMMM yyyy.', new Date(), { locale: da }),
+        subject,
+        ruling,
+      );
+    } catch (error) {
+      console.log(`There was an error scraping ${url} :`, error);
+    }
 
     await page.close();
   }

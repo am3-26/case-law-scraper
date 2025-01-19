@@ -20,11 +20,11 @@ import { Case } from './cases/case.model';
       entities: [Case],
       migrations: [],
       synchronize: true, // just for dev env
-      logging: true,
+      logging: false,
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      // autoSchemaFile: 'schema.gql',
+      autoSchemaFile: true,
       sortSchema: true,
     }),
   ],

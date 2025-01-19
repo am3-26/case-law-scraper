@@ -6,7 +6,11 @@ import { Column, Entity, PrimaryColumn } from 'typeorm';
 export class Case {
   @PrimaryColumn()
   @Field(() => ID)
-  caseID: string;
+  url: string;
+
+  @Column('text', { array: true })
+  @Field(() => [String])
+  caseIds: string[];
 
   @Column()
   @Field()

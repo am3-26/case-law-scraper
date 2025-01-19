@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Case } from './case.model';
-import { Repository } from 'typeorm';
+import { ArrayContains, In, Repository } from 'typeorm';
 
 @Injectable()
 export class CaseService {
@@ -11,13 +11,15 @@ export class CaseService {
   ) {}
 
   async storeCase(
-    caseID: string,
+    url: string,
+    caseIds: string[],
     date: Date,
     areaOfLaw: string,
     ruling: string,
   ): Promise<Case> {
     const ccase = this.caseRepository.create({
-      caseID,
+      url,
+      caseIds,
       date,
       areaOfLaw,
       ruling,
@@ -29,7 +31,11 @@ export class CaseService {
     return this.caseRepository.find();
   }
 
-  async findById(id: string): Promise<Case> {
-    return this.caseRepository.findOneBy({ caseID: id });
+  async findByCaseId(id: string): Promise<Case[]> {
+    return this.caseRepository.find({
+      where: {
+        caseIds: ArrayContains([id]),
+      },
+    });
   }
 }
