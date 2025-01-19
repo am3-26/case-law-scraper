@@ -52,11 +52,6 @@ GraphQL IDE:
   }
 }
 ```
-Post request (curl):
-
-```shell
-curl 'http://localhost:3000/graphql' -H 'Accept-Encoding: gzip, deflate, br' -H 'Content-Type: application/json' -H 'Accept: application/json' -H 'Connection: keep-alive' -H 'DNT: 1' -H 'Origin: http://localhost:3000' --data-binary '{"query":"{scrape(pages:1) {url,caseIds,date,areaOfLaw,ruling}}"}' --compressed
-```
 
 ## Get rulings by case ID
 The query fetches information about a specific ruling by its case ID. 
@@ -73,11 +68,6 @@ GraphQL IDE:
     ruling
   }
 }
-```
-Post request (curl):
-
-```shell
-curl 'http://localhost:3000/graphql' -H 'Accept-Encoding: gzip, deflate, br' -H 'Content-Type: application/json' -H 'Accept: application/json' -H 'Connection: keep-alive' -H 'DNT: 1' -H 'Origin: http://localhost:3000' --data-binary '{"query":"{getRulingsByCaseId(id:\"23/12751\") {url,caseIds,date,areaOfLaw,ruling}}"}' --compressed
 ```
 
 # Key decisions & future considerations
